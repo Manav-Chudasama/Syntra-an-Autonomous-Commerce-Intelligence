@@ -1,0 +1,9 @@
+curl --location 'https://litellm-qc.zycus.net/v1/chat/completions' \
+--header 'Authorization: Bearer sk-SfyNGxhcv7RnQKbZFWX2LQ' \
+--header 'Content-Type: application/json' \
+--header 'product: PC1' \
+--header 'Cookie: 6bf6da0e46dc446bd58693d49c303e18=f3f865650f0f8f3b30731936b2eb5857' \
+--data '{
+    "model": "qwen-cursor",
+    "messages": [{"role": "user", "content": "OK?"}]
+  }'
