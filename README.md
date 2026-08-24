@@ -16,6 +16,12 @@ Kairo is an AI-powered inventory management system designed to optimize stock le
 - **Interactive Dashboard**: Visualize products, suggestions, and simulate inventory changes
 - **RESTful API**: Well-documented API for integration with other systems
 
+## Screenshots
+
+![Dashboard View](Screenshot%202026-08-24%20151222.png)
+
+![Suggestion Management](Screenshot%202026-08-24%20151257.png)
+
 ## Tech Stack
 
 ### Backend
