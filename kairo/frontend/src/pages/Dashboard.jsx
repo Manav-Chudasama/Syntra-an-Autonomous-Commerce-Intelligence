@@ -228,15 +228,19 @@ const Dashboard = () => {
             🤖 Pricing Suggestions ({pricingSuggestions.length})
           </h2>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pricingSuggestions.map(suggestion => (
-              <SuggestionCard
-                key={suggestion.id}
-                suggestion={suggestion}
-                type="pricing"
-                onAccept={handleAcceptPricingSuggestion}
-                onReject={handleRejectPricingSuggestion}
-              />
-            ))}
+            {pricingSuggestions.map(suggestion => {
+              const product = products.find(p => p.id === suggestion.productId);
+              return (
+                <SuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  product={product}
+                  type="pricing"
+                  onAccept={handleAcceptPricingSuggestion}
+                  onReject={handleRejectPricingSuggestion}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -248,15 +252,19 @@ const Dashboard = () => {
             📦 Reorder Suggestions ({reorderSuggestions.length})
           </h2>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {reorderSuggestions.map(suggestion => (
-              <SuggestionCard
-                key={suggestion.id}
-                suggestion={suggestion}
-                type="reorder"
-                onAccept={handleAcceptReorderSuggestion}
-                onReject={handleRejectReorderSuggestion}
-              />
-            ))}
+            {reorderSuggestions.map(suggestion => {
+              const product = products.find(p => p.id === suggestion.productId);
+              return (
+                <SuggestionCard
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  product={product}
+                  type="reorder"
+                  onAccept={handleAcceptReorderSuggestion}
+                  onReject={handleRejectReorderSuggestion}
+                />
+              );
+            })}
           </div>
         </div>
       )}

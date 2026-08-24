@@ -2,7 +2,7 @@
 import React from 'react';
 import { formatCurrency, formatPercentage, getSuggestionStatusColor } from '../utils/formatters';
 
-const SuggestionCard = ({ suggestion, type, onAccept, onReject }) => {
+const SuggestionCard = ({ suggestion, product, type, onAccept, onReject }) => {
   const statusColor = getSuggestionStatusColor(suggestion.status);
   
   const isPricing = type === 'pricing';
@@ -14,7 +14,8 @@ const SuggestionCard = ({ suggestion, type, onAccept, onReject }) => {
           <h3 className="font-semibold text-lg">
             {isPricing ? 'Pricing' : 'Reorder'} Suggestion
           </h3>
-          <p className="text-gray-600 text-sm">Product ID: {suggestion.productId}</p>
+          <p className="text-gray-900 font-medium">{product?.name || 'Unknown Product'}</p>
+          <p className="text-gray-500 text-xs">ID: {suggestion.productId}</p>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`}>
           {suggestion.status}
@@ -26,7 +27,9 @@ const SuggestionCard = ({ suggestion, type, onAccept, onReject }) => {
           <>
             <div>
               <p className="text-gray-500">Current Price</p>
-              <p className="font-medium line-through text-gray-500">$XX.XX</p>
+              <p className="font-medium line-through text-gray-500">
+                {product ? formatCurrency(product.currentPrice) : '$XX.XX'}
+              </p>
             </div>
             <div>
               <p className="text-gray-500">Suggested Price</p>
@@ -46,7 +49,9 @@ const SuggestionCard = ({ suggestion, type, onAccept, onReject }) => {
           <>
             <div>
               <p className="text-gray-500">Current Stock</p>
-              <p className="font-medium text-gray-500">XX units</p>
+              <p className="font-medium text-gray-500">
+                {product ? `${product.stockLevel} units` : 'XX units'}
+              </p>
             </div>
             <div>
               <p className="text-gray-500">Suggested Quantity</p>
