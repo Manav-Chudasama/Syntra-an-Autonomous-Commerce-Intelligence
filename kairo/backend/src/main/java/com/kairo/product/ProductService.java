@@ -75,9 +75,8 @@ public class ProductService {
             
             Product updatedProduct = productRepository.save(product);
             
-            // Trigger agentic loop if stock level crossed threshold
-            if (previousStockLevel > product.getReorderThreshold() && 
-                newStockLevel <= product.getReorderThreshold()) {
+            // Trigger agentic loop if stock level is below or equal to threshold
+            if (newStockLevel <= product.getReorderThreshold()) {
                 InventoryEvent event = new InventoryEvent(id, previousStockLevel, newStockLevel);
                 agenticLoopService.processInventoryEvent(event);
             }

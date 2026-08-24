@@ -56,9 +56,8 @@ public class AgenticLoopService {
                 return;
             }
             
-            // Check if stock level dropped below threshold
-            if (event.getNewStockLevel() <= product.getReorderThreshold() && 
-                event.getPreviousStockLevel() > product.getReorderThreshold()) {
+            // Check if stock level is below threshold
+            if (event.getNewStockLevel() <= product.getReorderThreshold()) {
                 generateSuggestionsForProduct(product, "LOW_INVENTORY");
             }
         } finally {
@@ -95,8 +94,8 @@ public class AgenticLoopService {
     }
 
     private void generateSuggestionsForProduct(Product product, String triggerType) {
-        // Use AI strategy by default, but could be configurable
-        CommerceAdvisor advisor = advisorFactory.getAdvisor("ai");
+        // Use Rule strategy for now since AI is unimplemented
+        CommerceAdvisor advisor = advisorFactory.getAdvisor("rule");
         
         // Generate pricing suggestions
         List<PricingSuggestion> pricingSuggestions = advisor.generatePricingSuggestions(product);

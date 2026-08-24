@@ -44,19 +44,22 @@ const ProductCard = ({ product, onSimulateOrder, onReceiveInventory }) => {
       
       <div className="mt-4 flex space-x-2">
         <button 
-          onClick={() => onSimulateOrder(product.id, 1)}
+          type="button"
+          onClick={(e) => { e.preventDefault(); onSimulateOrder(product.id, 1); }}
           className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded text-sm transition-colors"
         >
           Sell 1
         </button>
         <button 
-          onClick={() => onSimulateOrder(product.id, 5)}
+          type="button"
+          onClick={(e) => { e.preventDefault(); onSimulateOrder(product.id, 5); }}
           className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded text-sm transition-colors"
         >
           Sell 5
         </button>
         <button 
-          onClick={() => onReceiveInventory(product.id, 10)}
+          type="button"
+          onClick={(e) => { e.preventDefault(); onReceiveInventory(product.id, 10); }}
           className="flex-1 bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-sm transition-colors"
         >
           +10 Stock

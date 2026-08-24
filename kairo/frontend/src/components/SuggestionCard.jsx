@@ -73,13 +73,15 @@ const SuggestionCard = ({ suggestion, type, onAccept, onReject }) => {
       {suggestion.status === 'PENDING' && (
         <div className="mt-4 flex space-x-2">
           <button 
-            onClick={() => onAccept(suggestion.id)}
+            type="button"
+            onClick={(e) => { e.preventDefault(); onAccept(suggestion.id); }}
             className="flex-1 bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded text-sm transition-colors"
           >
             Accept
           </button>
           <button 
-            onClick={() => onReject(suggestion.id)}
+            type="button"
+            onClick={(e) => { e.preventDefault(); onReject(suggestion.id); }}
             className="flex-1 bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded text-sm transition-colors"
           >
             Reject
