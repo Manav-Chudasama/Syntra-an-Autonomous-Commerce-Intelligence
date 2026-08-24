@@ -2,8 +2,6 @@
 
 An intelligent inventory management system that provides dynamic pricing and reorder suggestions using both rule-based algorithms and AI.
 
-![Kairo Dashboard](kairo/frontend/public/hero.png)
-
 ## Overview
 
 Kairo is an AI-powered inventory management system designed to optimize stock levels and pricing strategies. The system monitors inventory levels and demand patterns, generates intelligent pricing and reorder suggestions using both rule-based and AI approaches, and implements an agentic loop that automatically triggers suggestions based on events.
