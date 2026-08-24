@@ -4,6 +4,80 @@ import ProductCard from '../components/ProductCard';
 import SuggestionCard from '../components/SuggestionCard';
 import { api } from '../services/api';
 
+// ── tiny inline helpers ──────────────────────────────────────────────────────
+
+const StatCard = ({ label, value, sub }) => (
+  <div style={{
+    background: '#fff',
+    border: '1px solid #e5e5e5',
+    borderRadius: 8,
+    padding: '20px 24px',
+    display: 'flex', flexDirection: 'column', gap: 4,
+  }}>
+    <span style={{ fontSize: 12, fontWeight: 500, color: '#737373', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      {label}
+    </span>
+    <span style={{ fontSize: 28, fontWeight: 700, color: '#0a0a0a', letterSpacing: '-0.04em', lineHeight: 1 }}>
+      {value}
+    </span>
+    {sub && <span style={{ fontSize: 11, color: '#a3a3a3', marginTop: 2 }}>{sub}</span>}
+  </div>
+);
+
+const SectionHeader = ({ title, badge, action }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <h2 style={{ fontSize: 16, fontWeight: 600, color: '#0a0a0a', margin: 0 }}>{title}</h2>
+      {badge !== undefined && (
+        <span style={{
+          background: '#0a0a0a', color: '#fff',
+          borderRadius: 99, padding: '1px 8px',
+          fontSize: 11, fontWeight: 600,
+          minWidth: 20, textAlign: 'center',
+        }}>
+          {badge}
+        </span>
+      )}
+    </div>
+    {action}
+  </div>
+);
+
+const Toast = ({ toast }) => {
+  if (!toast) return null;
+  const styles = {
+    success: { bg: '#0a0a0a', icon: '✓' },
+    error:   { bg: '#dc2626', icon: '✕' },
+    info:    { bg: '#2563eb', icon: 'ℹ' },
+  };
+  const s = styles[toast.type] || styles.info;
+  return (
+    <div style={{
+      position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+      background: s.bg, color: '#fff',
+      padding: '10px 16px', borderRadius: 8,
+      fontSize: 13, fontWeight: 500,
+      display: 'flex', alignItems: 'center', gap: 8,
+      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+      animation: 'slideUp 0.2s ease',
+      maxWidth: 360,
+    }}>
+      <span style={{
+        width: 18, height: 18,
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,0.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 10, flexShrink: 0,
+      }}>
+        {s.icon}
+      </span>
+      {toast.message}
+    </div>
+  );
+};
+
+// ── Dashboard component ──────────────────────────────────────────────────────
+
 const Dashboard = () => {
   const [products, setProducts] = useState([]);
   const [pricingSuggestions, setPricingSuggestions] = useState([]);
@@ -13,13 +87,11 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // Show a toast message that auto-dismisses
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
-  // Background fetch — does NOT trigger a loading spinner or page jump
   const backgroundFetch = useCallback(async () => {
     try {
       const [productsData, pricingData, reorderData] = await Promise.all([
@@ -36,7 +108,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Initial fetch — shows spinner only on first load
   const initialFetch = useCallback(async () => {
     try {
       setInitialLoading(true);
@@ -46,17 +117,15 @@ const Dashboard = () => {
     }
   }, [backgroundFetch]);
 
-  // Manual refresh button — shows a small indicator but no full-page spinner
   const handleManualRefresh = async () => {
     setRefreshing(true);
     await backgroundFetch();
     setRefreshing(false);
-    showToast('Data refreshed!', 'success');
+    showToast('Data refreshed', 'success');
   };
 
   useEffect(() => {
     initialFetch();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(backgroundFetch, 30000);
     return () => clearInterval(interval);
   }, [initialFetch, backgroundFetch]);
@@ -64,17 +133,15 @@ const Dashboard = () => {
   const handleSimulateOrder = async (productId, quantity) => {
     try {
       await api.simulateOrder(productId, quantity);
-      // Immediate update for stock numbers
       await backgroundFetch();
-      showToast(`Sold ${quantity} unit(s). Checking for AI suggestions...`, 'info');
-      // Wait 1.5s for the async agentic loop on the backend to finish, then re-poll
+      showToast(`Sold ${quantity} unit(s) — scanning for suggestions…`, 'info');
       setTimeout(async () => {
         await backgroundFetch();
-        showToast('Dashboard updated with latest suggestions!', 'success');
+        showToast('Dashboard synced', 'success');
       }, 1500);
     } catch (err) {
       console.error('Failed to simulate order', err);
-      showToast('Failed to process order', 'error');
+      showToast('Order failed', 'error');
     }
   };
 
@@ -82,134 +149,164 @@ const Dashboard = () => {
     try {
       await api.receiveInventory(productId, quantity);
       await backgroundFetch();
-      showToast(`Added ${quantity} units to stock!`, 'success');
+      showToast(`+${quantity} units added to stock`, 'success');
     } catch (err) {
-      console.error('Failed to receive inventory', err);
       showToast('Failed to receive inventory', 'error');
     }
   };
 
-  const handleAcceptPricingSuggestion = async (suggestionId) => {
+  const handleAcceptPricingSuggestion = async (id) => {
     try {
-      await api.acceptPricingSuggestion(suggestionId);
+      await api.acceptPricingSuggestion(id);
       await backgroundFetch();
-      showToast('Pricing suggestion accepted! Product price updated.', 'success');
-    } catch (err) {
-      console.error('Failed to accept pricing suggestion', err);
-      showToast('Failed to accept suggestion', 'error');
-    }
+      showToast('Price updated', 'success');
+    } catch (err) { showToast('Failed', 'error'); }
   };
 
-  const handleRejectPricingSuggestion = async (suggestionId) => {
+  const handleRejectPricingSuggestion = async (id) => {
     try {
-      await api.rejectPricingSuggestion(suggestionId);
+      await api.rejectPricingSuggestion(id);
       await backgroundFetch();
-      showToast('Pricing suggestion rejected.', 'info');
-    } catch (err) {
-      console.error('Failed to reject pricing suggestion', err);
-      showToast('Failed to reject suggestion', 'error');
-    }
+      showToast('Suggestion dismissed', 'info');
+    } catch (err) { showToast('Failed', 'error'); }
   };
 
-  const handleAcceptReorderSuggestion = async (suggestionId) => {
+  const handleAcceptReorderSuggestion = async (id) => {
     try {
-      await api.acceptReorderSuggestion(suggestionId);
+      await api.acceptReorderSuggestion(id);
       await backgroundFetch();
-      showToast('Reorder suggestion accepted!', 'success');
-    } catch (err) {
-      console.error('Failed to accept reorder suggestion', err);
-      showToast('Failed to accept suggestion', 'error');
-    }
+      showToast('Reorder placed', 'success');
+    } catch (err) { showToast('Failed', 'error'); }
   };
 
-  const handleRejectReorderSuggestion = async (suggestionId) => {
+  const handleRejectReorderSuggestion = async (id) => {
     try {
-      await api.rejectReorderSuggestion(suggestionId);
+      await api.rejectReorderSuggestion(id);
       await backgroundFetch();
-      showToast('Reorder suggestion rejected.', 'info');
-    } catch (err) {
-      console.error('Failed to reject reorder suggestion', err);
-      showToast('Failed to reject suggestion', 'error');
-    }
+      showToast('Suggestion dismissed', 'info');
+    } catch (err) { showToast('Failed', 'error'); }
   };
 
   if (initialLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 16 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: '50%',
+          border: '2px solid #e5e5e5', borderTopColor: '#0a0a0a',
+          animation: 'spin 0.7s linear infinite',
+        }} />
+        <span style={{ fontSize: 13, color: '#737373' }}>Loading dashboard…</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <strong className="font-bold">Error! </strong>
-        <span className="block sm:inline">{error}</span>
+      <div style={{
+        background: '#fef2f2', border: '1px solid #fecaca',
+        borderRadius: 8, padding: '16px 20px', color: '#dc2626',
+        fontSize: 14,
+      }}>
+        <strong>Error:</strong> {error}
       </div>
     );
   }
 
-  const toastColors = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    info: 'bg-blue-500',
-  };
+  const lowStockCount = products.filter(p => p.stockLevel <= p.reorderThreshold).length;
 
   return (
-    <div className="space-y-8">
-      {/* Toast notification */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 ${toastColors[toast.type]} text-white px-5 py-3 rounded-lg shadow-lg text-sm transition-all`}>
-          {toast.message}
-        </div>
-      )}
+    <>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp {
+          from { transform: translateY(8px); opacity: 0; }
+          to   { transform: translateY(0);   opacity: 1; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .suggestion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        @media (max-width: 1100px) { .product-grid, .suggestion-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 680px)  { .product-grid, .suggestion-grid { grid-template-columns: 1fr; } }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        @media (max-width: 900px)  { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px)  { .stat-grid { grid-template-columns: 1fr; } }
+      `}</style>
 
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">StockPulse Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          AI-powered inventory management and dynamic pricing engine
-        </p>
+      <Toast toast={toast} />
+
+      {/* Page Header */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0a0a0a', letterSpacing: '-0.04em', margin: 0 }}>
+              Commerce Dashboard
+            </h1>
+            <p style={{ fontSize: 14, color: '#737373', marginTop: 4 }}>
+              Real-time inventory & AI-powered pricing intelligence
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Live indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6,
+              background: '#fff', border: '1px solid #e5e5e5', borderRadius: 6,
+              padding: '6px 12px', fontSize: 12, color: '#737373', fontWeight: 500,
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', background: '#16a34a',
+                boxShadow: '0 0 0 2px rgba(22,163,74,0.2)',
+                display: 'inline-block',
+              }} />
+              Live
+            </div>
+            <button
+              type="button"
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: '#0a0a0a', color: '#fff',
+                border: 'none', borderRadius: 6,
+                padding: '7px 14px', fontSize: 13, fontWeight: 500,
+                cursor: refreshing ? 'not-allowed' : 'pointer',
+                opacity: refreshing ? 0.7 : 1,
+                fontFamily: 'Inter',
+              }}
+            >
+              {refreshing && (
+                <span style={{
+                  width: 12, height: 12, borderRadius: '50%',
+                  border: '1.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff',
+                  animation: 'spin 0.7s linear infinite', display: 'inline-block',
+                }} />
+              )}
+              Refresh
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Total Products</h3>
-          <p className="text-2xl font-bold">{products.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Low Stock Items</h3>
-          <p className="text-2xl font-bold">
-            {products.filter(p => p.stockLevel <= p.reorderThreshold).length}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Pending Pricing Suggestions</h3>
-          <p className="text-2xl font-bold">{pricingSuggestions.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-gray-500 text-sm">Pending Reorder Suggestions</h3>
-          <p className="text-2xl font-bold">{reorderSuggestions.length}</p>
-        </div>
+      {/* Stats Row */}
+      <div className="stat-grid" style={{ marginBottom: 32 }}>
+        <StatCard label="Total Products" value={products.length} sub="in catalog" />
+        <StatCard
+          label="Low Stock"
+          value={lowStockCount}
+          sub={lowStockCount > 0 ? 'needs attention' : 'all healthy'}
+        />
+        <StatCard label="Pricing Suggestions" value={pricingSuggestions.length} sub="pending review" />
+        <StatCard label="Reorder Suggestions" value={reorderSuggestions.length} sub="pending review" />
       </div>
+
+      {/* Divider */}
+      <div style={{ borderTop: '1px solid #e5e5e5', marginBottom: 32 }} />
 
       {/* Products Section */}
-      <div>
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Products</h2>
-          <button
-            id="refresh-btn"
-            type="button"
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white px-4 py-2 rounded text-sm transition-colors flex items-center gap-2"
-          >
-            {refreshing && <span className="animate-spin inline-block h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>}
-            Refresh
-          </button>
-        </div>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <section style={{ marginBottom: 40 }}>
+        <SectionHeader title="Products" />
+        <div className="product-grid">
           {products.map(product => (
             <ProductCard
               key={product.id}
@@ -219,15 +316,32 @@ const Dashboard = () => {
             />
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Pricing Suggestions Section */}
+      {/* AI Suggestions */}
+      {(pricingSuggestions.length > 0 || reorderSuggestions.length > 0) && (
+        <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: 32 }}>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 11, fontWeight: 600, color: '#737373',
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', background: '#2563eb',
+                boxShadow: '0 0 0 2px rgba(37,99,235,0.2)',
+              }} />
+              AI Recommendations
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Pricing Suggestions */}
       {pricingSuggestions.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            🤖 Pricing Suggestions ({pricingSuggestions.length})
-          </h2>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <section style={{ marginBottom: 32 }}>
+          <SectionHeader title="Pricing Suggestions" badge={pricingSuggestions.length} />
+          <div className="suggestion-grid">
             {pricingSuggestions.map(suggestion => {
               const product = products.find(p => p.id === suggestion.productId);
               return (
@@ -242,16 +356,14 @@ const Dashboard = () => {
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Reorder Suggestions Section */}
+      {/* Reorder Suggestions */}
       {reorderSuggestions.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            📦 Reorder Suggestions ({reorderSuggestions.length})
-          </h2>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <section style={{ marginBottom: 32 }}>
+          <SectionHeader title="Reorder Suggestions" badge={reorderSuggestions.length} />
+          <div className="suggestion-grid">
             {reorderSuggestions.map(suggestion => {
               const product = products.find(p => p.id === suggestion.productId);
               return (
@@ -266,17 +378,24 @@ const Dashboard = () => {
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Empty state for suggestions */}
+      {/* Empty state */}
       {pricingSuggestions.length === 0 && reorderSuggestions.length === 0 && (
-        <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-lg">
-          <p className="text-lg">No pending suggestions yet.</p>
-          <p className="text-sm mt-1">Sell items on low-stock products to trigger AI suggestions.</p>
+        <div style={{
+          border: '1px dashed #d4d4d4', borderRadius: 8,
+          padding: '40px 24px', textAlign: 'center',
+          background: '#fafafa',
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>◈</div>
+          <p style={{ fontSize: 14, fontWeight: 500, color: '#0a0a0a' }}>No pending suggestions</p>
+          <p style={{ fontSize: 13, color: '#737373', marginTop: 4 }}>
+            Sell units on low-stock products to trigger the AI engine
+          </p>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
