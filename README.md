@@ -1,38 +1,14 @@
-# StockPulse - AI Inventory & Dynamic Pricing Engine
+# Kairo - AI Inventory & Dynamic Pricing Engine
 
 An intelligent inventory management system that provides dynamic pricing and reorder suggestions using both rule-based algorithms and AI.
 
-![StockPulse Dashboard](kairo/frontend/public/hero.png)
+![Kairo Dashboard](kairo/frontend/public/hero.png)
 
-## Welcome to StockPulse!
+## Overview
 
-This repository contains the StockPulse project, an AI-powered inventory management system designed to optimize stock levels and pricing strategies. The system monitors inventory levels and demand patterns, generates intelligent pricing and reorder suggestions using both rule-based and AI approaches, and implements an agentic loop that automatically triggers suggestions based on events.
+Kairo is an AI-powered inventory management system designed to optimize stock levels and pricing strategies. The system monitors inventory levels and demand patterns, generates intelligent pricing and reorder suggestions using both rule-based and AI approaches, and implements an agentic loop that automatically triggers suggestions based on events.
 
-## Quick Start
-
-To get started with StockPulse, navigate to the main project directory:
-
-```bash
-cd kairo
-```
-
-Then follow the setup instructions in [kairo/README.md](kairo/README.md).
-
-## Project Structure
-
-```
-zycushackathon/
-│
-├── kairo/                     # Main project directory
-│   ├── backend/              # Spring Boot backend application
-│   ├── frontend/             # React frontend application
-│   ├── README.md             # Detailed project documentation
-│   └── ...
-│
-└── README.md                 # This file
-```
-
-## Features
+## Key Features
 
 - **Real-time Inventory Tracking**: Monitor stock levels, demand velocity, and product status
 - **Dual Advisory System**: Choose between rule-based and AI-powered pricing/reorder suggestions
@@ -59,6 +35,94 @@ zycushackathon/
 - **Custom LLM Gateway** - Supports multiple AI providers (Qwen, Groq, Ollama)
 - **Structured Prompting** - Consistent AI response formatting
 
-## Documentation
+## Architecture Overview
 
-For detailed instructions on setting up and running the project, please refer to the comprehensive documentation in [kairo/README.md](kairo/README.md).
+```
+┌─────────────────┐    ┌──────────────────┐    ┌────────────────────┐
+│   Frontend      │    │   Backend        │    │   AI Providers     │
+│   (React)       │    │   (Spring Boot)  │    │   (Qwen/Groq/etc)  │
+│                 │    │                  │    │                    │
+│ ┌─────────────┐ │    │ ┌──────────────┐ │    │ ┌────────────────┐ │
+│ │  Dashboard  │ │    │ │  Controllers │ │    │ │   Qwen API     │ │
+│ ├─────────────┤ │    │ ├──────────────┤ │    │ ├────────────────┤ │
+│ │ ProductCard │ │◄──►│ │  Services    │ │◄──►│ │   Groq API     │ │
+│ ├─────────────┤ │    │ ├──────────────┤ │    │ ├────────────────┤ │
+│ │SuggestionCard│ │    │ │Repositories  │ │    │ │  Ollama API    │ │
+│ └─────────────┘ │    │ └──────────────┘ │    │ └────────────────┘ │
+└─────────────────┘    └─────────▲────────┘    └─────────▲──────────┘
+                                 │                       │
+                                 │         ┌─────────────┘
+                                 ▼         ▼
+                            ┌──────────────────┐
+                            │   H2 Database    │
+                            │ (In-Memory)      │
+                            └──────────────────┘
+```
+
+## Folder Structure
+
+```
+kairo/
+│
+├── backend/                    # Spring Boot backend application
+│   ├── src/main/java/com/kairo/
+│   │   ├── product/            # Product entities, repositories, services
+│   │   ├── suggestion/         # Suggestion entities and management
+│   │   ├── commerce/           # Advisory system (rule-based and AI)
+│   │   ├── ai/                 # AI integration components
+│   │   ├── agent/              # Agentic loop implementation
+│   │   └── config/             # Configuration classes
+│   ├── src/main/resources/     # Application configuration
+│   ├── pom.xml                 # Maven configuration
+│   └── README.md               # Backend documentation
+│
+├── frontend/                   # React frontend application
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   ├── pages/              # Page components
+│   │   ├── services/           # API service functions
+│   │   └── utils/              # Utility functions
+│   ├── public/                 # Static assets
+│   ├── package.json            # NPM dependencies
+│   └── README.md               # Frontend documentation
+│
+├── README.md                   # This file
+└── .gitignore                  # Git ignore file
+```
+
+## Getting Started
+
+### Prerequisites
+- **Backend**: Java 17+, Maven 3.6+
+- **Frontend**: Node.js 16+, npm 7+
+
+### Backend Setup
+```bash
+cd kairo/backend
+mvn spring-boot:run
+```
+
+### Frontend Setup
+```bash
+cd kairo/frontend
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173` in your browser to access the application.
+
+## API Documentation
+
+The backend exposes a RESTful API for all inventory and suggestion operations:
+
+- `GET /api/products` - Retrieve all products
+- `POST /api/products/{id}/sell` - Simulate selling inventory
+- `POST /api/products/{id}/receive` - Simulate receiving inventory
+- `GET /api/pricing-suggestions/pending` - Get pending pricing suggestions
+- `POST /api/pricing-suggestions/{id}/accept` - Accept a pricing suggestion
+- `GET /api/reorder-suggestions/pending` - Get pending reorder suggestions
+- `POST /api/reorder-suggestions/{id}/accept` - Accept a reorder suggestion
+
+## License
+
+This project is licensed under the MIT License.
