@@ -2,12 +2,14 @@ import { useState } from 'react';
 import Dashboard from './pages/Dashboard';
 import ProductsPage from './pages/ProductsPage';
 import SuggestionsPage from './pages/SuggestionsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import './index.css';
 
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard' },
   { id: 'products',    label: 'Products' },
   { id: 'suggestions', label: 'Suggestions' },
+  { id: 'analytics',   label: 'Analytics' },
 ];
 
 function App() {
@@ -18,6 +20,7 @@ function App() {
       case 'dashboard':   return <Dashboard onNavigate={setActivePage} />;
       case 'products':    return <ProductsPage />;
       case 'suggestions': return <SuggestionsPage />;
+      case 'analytics':   return <AnalyticsPage />;
       default:            return <Dashboard onNavigate={setActivePage} />;
     }
   };
